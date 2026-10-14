@@ -37,6 +37,14 @@ const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWX".split(""); // A–X, no Y/Z
 const EDGE_PIECES = ["UB","UR","UF","UL","FR","FL","BR","BL","DF","DR","DB","DL"];
 const CORNER_PIECES = ["UBL","UBR","UFR","UFL","DFL","DFR","DBR","DBL"];
 
+// Active lettering = stock Speffz + user overrides (Settings → Letter scheme).
+const stickerKey = (s) => s.piece + "|" + s.face;
+function effStickers(base, over) {
+  return base.map((s) => ({ ...s, letter: (over && over[stickerKey(s)]) || s.letter }));
+}
+const effEdges = () => effStickers(EDGES, store.scheme && store.scheme.edges);
+const effCorners = () => effStickers(CORNERS, store.scheme && store.scheme.corners);
+
 /* ---------- Store ---------- */
 const KEY = "bld3.trainer.v1";
 const DEFAULTS = {
@@ -48,6 +56,7 @@ const DEFAULTS = {
   },
   times: [],
   drill: { asked: 0, correct: 0, streak: 0, best: 0 },
+  scheme: null, // {edges:{key:letter},corners:{...}} overrides, or null = stock Speffz
 };
 let store;
 function loadStore() {
@@ -60,6 +69,7 @@ function loadStore() {
       settings: Object.assign({}, DEFAULTS.settings, s.settings || {}),
       times: Array.isArray(s.times) ? s.times : [],
       drill: Object.assign({}, DEFAULTS.drill, s.drill || {}),
+      scheme: s.scheme || null,
     };
   } catch { return structuredClone(DEFAULTS); }
 }
@@ -111,8 +121,10 @@ function applyTheme() { document.documentElement.dataset.theme = store.settings.
 
 /* ---------- Learn ---------- */
 let learnType = "edges";
+let learnCards = false; // flashcard mode: tap a sticker to reveal its letter
+const learnRevealed = new Set();
 function renderLearn() {
-  const data = learnType === "edges" ? EDGES : CORNERS;
+  const data = learnType === "edges" ? effEdges() : effCorners();
   const buffer = learnType === "edges" ? store.settings.edgeBuffer : store.settings.cornerBuffer;
   const grid = $("learn-grid");
   grid.innerHTML = "";
@@ -129,7 +141,15 @@ function renderLearn() {
       left.textContent = s.piece;
       const right = document.createElement("span");
       right.className = "letter";
-      right.textContent = s.letter;
+      const key = stickerKey(s);
+      if (learnCards && !learnRevealed.has(key)) {
+        right.textContent = "?";
+        d.classList.add("cardback");
+        d.title = "Tap to reveal";
+        d.addEventListener("click", () => { learnRevealed.add(key); renderLearn(); });
+      } else {
+        right.textContent = s.letter;
+      }
       d.appendChild(left); d.appendChild(right);
       block.appendChild(d);
     }
@@ -140,14 +160,20 @@ function renderLearn() {
 }
 $("learn-edges-btn").addEventListener("click", () => { learnType = "edges"; renderLearn(); });
 $("learn-corners-btn").addEventListener("click", () => { learnType = "corners"; renderLearn(); });
+$("learn-cards-btn").addEventListener("click", () => {
+  learnCards = !learnCards;
+  learnRevealed.clear();
+  $("learn-cards-btn").classList.toggle("active", learnCards);
+  renderLearn();
+});
 
 /* ---------- Drill ---------- */
 let drillQ = null, drillLock = false;
 function drillPool() {
   const pieces = $("drill-pieces").value;
   let pool = [];
-  if (pieces === "both" || pieces === "edges") pool = pool.concat(EDGES.map((s) => ({ ...s, type: "Edge" })));
-  if (pieces === "both" || pieces === "corners") pool = pool.concat(CORNERS.map((s) => ({ ...s, type: "Corner" })));
+  if (pieces === "both" || pieces === "edges") pool = pool.concat(effEdges().map((s) => ({ ...s, type: "Edge" })));
+  if (pieces === "both" || pieces === "corners") pool = pool.concat(effCorners().map((s) => ({ ...s, type: "Corner" })));
   if ($("drill-nobuffer").checked) {
     pool = pool.filter((s) => s.piece !== store.settings.edgeBuffer && s.piece !== store.settings.cornerBuffer);
   }
@@ -245,6 +271,7 @@ function gradeDrillType() {
   gradeDrill(v === drillQ.answer.letter, null);
 }
 $("drill-next").addEventListener("click", nextDrill);
+$("drill-reveal").addEventListener("click", () => gradeDrill(false, null));
 $("drill-submit").addEventListener("click", gradeDrillType);
 $("drill-input").addEventListener("keydown", (e) => { if (e.key === "Enter") gradeDrillType(); });
 $("drill-reset").addEventListener("click", () => {
@@ -596,6 +623,69 @@ $("data-wipe").addEventListener("click", () => {
   }
 });
 
+/* ---------- Custom scheme ---------- */
+function stockSchemeMap() {
+  const m = { edges: {}, corners: {} };
+  for (const s of EDGES) m.edges[stickerKey(s)] = s.letter;
+  for (const s of CORNERS) m.corners[stickerKey(s)] = s.letter;
+  return m;
+}
+function currentSchemeMap() {
+  const m = stockSchemeMap();
+  if (store.scheme) {
+    Object.assign(m.edges, store.scheme.edges || {});
+    Object.assign(m.corners, store.scheme.corners || {});
+  }
+  return m;
+}
+function renderSchemeEditor() {
+  const m = currentSchemeMap();
+  for (const [kind, list] of [["edges", EDGES], ["corners", CORNERS]]) {
+    const box = $("scheme-" + kind);
+    box.innerHTML = "";
+    for (const face of ["U", "L", "F", "R", "B", "D"]) {
+      const grp = document.createElement("div");
+      grp.className = "scheme-face";
+      const h = document.createElement("h4");
+      h.textContent = face + " face";
+      grp.appendChild(h);
+      for (const s of list.filter((x) => x.face === face)) {
+        const lab = document.createElement("label");
+        lab.textContent = s.piece + " ";
+        const inp = document.createElement("input");
+        inp.maxLength = 1;
+        inp.value = m[kind][stickerKey(s)];
+        inp.dataset.kind = kind;
+        inp.dataset.key = stickerKey(s);
+        inp.setAttribute("aria-label", kind + " " + stickerLabel(s));
+        lab.appendChild(inp);
+        grp.appendChild(lab);
+      }
+      box.appendChild(grp);
+    }
+  }
+  $("scheme-status").textContent = store.scheme ? "Custom scheme active." : "Stock Speffz active.";
+}
+function saveSchemeEditor() {
+  const over = { edges: {}, corners: {} };
+  let bad = 0;
+  document.querySelectorAll("#scheme-editor input").forEach((inp) => {
+    const v = inp.value.trim().toUpperCase();
+    if (!/^[A-X]$/.test(v)) { bad++; return; }
+    over[inp.dataset.kind][inp.dataset.key] = v;
+  });
+  if (bad) { alert(bad + " box(es) are not single letters A–X; fix them first."); return; }
+  const stock = stockSchemeMap();
+  const same = ["edges", "corners"].every((k) =>
+    Object.keys(over[k]).every((key) => over[k][key] === stock[k][key]));
+  store.scheme = same ? null : over;
+  save(); renderLearn(); renderSchemeEditor();
+}
+$("scheme-save").addEventListener("click", saveSchemeEditor);
+$("scheme-reset").addEventListener("click", () => {
+  store.scheme = null; save(); renderLearn(); renderSchemeEditor();
+});
+
 /* ---------- Boot ---------- */
 function boot(first) {
   applyTheme();
@@ -610,6 +700,7 @@ function boot(first) {
   $("set-theme").value = store.settings.theme;
   fillBufferSelects();
   renderLearn(); renderDrillStats(); buildLetterPad(); renderPairs(); renderTimes();
+  renderSchemeEditor();
   if (first) newScramble();
   for (const [id, key] of [["drill-pieces", "drillPieces"], ["drill-dir", "drillDir"], ["drill-mode", "drillMode"]]) {
     if (![...$(id).options].some((o) => o.value === store.settings[key])) $(id).selectedIndex = 0;

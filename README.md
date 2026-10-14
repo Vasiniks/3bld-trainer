@@ -37,9 +37,11 @@ The `.nojekyll` file is included so Pages serves everything verbatim.
 
 ## Features
 
-- **Learn** — Speffz grids for all six faces, edges + corners, buffer highlighted.
+- **Learn** — lettering grids for all six faces, edges + corners, buffer highlighted,
+  plus flashcard mode (tap a sticker to reveal).
 - **Drill** — sticker→letter, letter→sticker, or mixed; multiple choice or type-in
-  with an on-screen A–X pad; skip-buffers option; streak/best tracking.
+  with an on-screen A–X pad; reveal-hint (counts as miss); skip-buffers option;
+  streak/best tracking.
 - **Pairs** — your letter-pair word list with add/delete, JSON import/export,
   self-graded flashcard quiz. Saved pairs appear as hints in Memo.
 - **Memo** — random letter sequences (single or paired), timed or manual peek,
@@ -47,6 +49,8 @@ The `.nojekyll` file is included so Pages serves everything verbatim.
 - **Timer** — hold-to-arm spacebar/touch timer, random-move scrambles,
   click a time to cycle OK → +2 → DNF, best/ao5/ao12, manual entry.
 - **Settings** — edge/corner buffers, theme, full data export/import/wipe.
+- **Letter scheme** — rename any of the 48 stickers to train your own scheme
+  (the reference trainer's best feature, absorbed); stock Speffz is the default.
 - All data persists in `localStorage` (`bld3.trainer.v1`); nothing leaves the browser.
 
 ## Speffz tables (checkable)
@@ -79,10 +83,12 @@ the UFR corner carries C (U), J (F), M (R). Default buffers: DF edges, UFR corne
 ## Status / roadmap
 
 - [x] v1: drills, pairs, memo, timer, settings, Pages-ready static build
-- [ ] Exact-clone teardown of `speffz-trainer.pages.dev` (network was unavailable
-      during the build, so v1 was built from the published Speffz standard instead
-      of a file-by-file reverse-engineer — diff against the reference when online)
+- [x] Reference teardown of `speffz-trainer.pages.dev` (React + 3D cube quiz game:
+      renamable stickers, space-to-reveal hints, custom colors, scramble display —
+      absorbed as custom schemes, flashcards, drill reveal)
 - [ ] Real-trace memo mode (cube simulator: scramble → true memo sequence)
+- [ ] 3D cube view (reference has one; out of scope for the no-build static app —
+      would need Three.js via CDN or a build step)
 - [ ] Commutator / execution drills, edge-flip and corner-twist cycles
 - [ ] Audio recall mode, day-graph stats
 

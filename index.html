@@ -36,6 +36,7 @@
     <div class="seg" role="group" aria-label="Piece type">
       <button id="learn-edges-btn" class="seg-btn active">Edges</button>
       <button id="learn-corners-btn" class="seg-btn">Corners</button>
+      <button id="learn-cards-btn" class="seg-btn">Flashcards</button>
     </div>
     <div id="learn-grid" class="learn-grid"></div>
   </section>
@@ -83,6 +84,7 @@
         </div>
       </div>
       <div id="drill-feedback" class="feedback" aria-live="polite"></div>
+      <button id="drill-reveal" class="ghost">Reveal (counts as miss)</button>
       <button id="drill-next" class="primary">Next</button>
     </div>
   </section>
@@ -183,6 +185,20 @@
         </select>
       </label>
     </div>
+    <h3>Letter scheme</h3>
+    <p class="muted">Rename any sticker to use your own scheme. Letters must be A–X.
+      Saving an unchanged grid restores stock Speffz.</p>
+    <div id="scheme-editor">
+      <h4>Edges</h4>
+      <div id="scheme-edges" class="scheme-grid"></div>
+      <h4>Corners</h4>
+      <div id="scheme-corners" class="scheme-grid"></div>
+    </div>
+    <div class="controls">
+      <button id="scheme-save" class="primary">Save scheme</button>
+      <button id="scheme-reset" class="ghost">Reset to Speffz</button>
+      <span id="scheme-status" class="muted"></span>
+    </div>
     <div class="controls">
       <button id="data-export">Export all data</button>
       <button id="data-import-btn" class="ghost">Import all data</button>
@@ -191,8 +207,9 @@
     </div>
     <textarea id="data-box" rows="6" placeholder="Exported JSON appears here; paste JSON here to import, then press “Import all data”." aria-label="Data import/export"></textarea>
     <h3>About</h3>
-    <p class="muted">Lettering follows the community-standard Speffz scheme (A–X for edges,
-      A–X for corners). Everything is stored locally in your browser — no account, no server.
+    <p class="muted">Lettering defaults to the community-standard Speffz scheme (A–X for edges,
+      A–X for corners); Settings → Letter scheme holds your own overrides.
+      Everything is stored locally in your browser — no account, no server.
       See README for the full scheme tables, deploy notes, and roadmap.</p>
   </section>
 </main>

@@ -149,6 +149,13 @@ button:disabled { opacity: 0.45; cursor: default; }
 .times-list li { cursor: pointer; padding: 2px 0; font-variant-numeric: tabular-nums; }
 kbd { background: var(--bg-soft); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 1px 7px; font-size: 13px; }
 #data-box { width: 100%; margin-top: 8px; font-family: ui-monospace, monospace; font-size: 12px; }
+.cardback { cursor: pointer; }
+.cardback .letter { color: var(--muted); }
+.scheme-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 8px 0; }
+.scheme-face { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+.scheme-face h4 { margin: 0 0 6px; color: var(--muted); font-size: 13px; }
+.scheme-face label { display: inline-flex; align-items: center; gap: 4px; margin: 0 8px 6px 0; font-size: 13px; }
+.scheme-face input { width: 38px; text-align: center; text-transform: uppercase; font-weight: 800; }
 footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 @media (max-width: 560px) {
   .time-display { font-size: 56px; }
