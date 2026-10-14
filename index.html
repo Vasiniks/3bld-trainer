@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3BLD Trainer — Speffz, pairs, memo &amp; timer</title>
+<meta name="description" content="A general 3x3 blindfolded trainer: Speffz lettering drills, letter-pair words, memo recall, and a speed timer with stats. Static site, works on Cloudflare Pages and GitHub Pages.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="cube" aria-hidden="true">◧</span>
+    <div>
+      <h1>3BLD Trainer</h1>
+      <p class="tagline">Speffz drills · letter pairs · memo · timer</p>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Trainer sections">
+    <button role="tab" data-tab="learn" class="active">Learn</button>
+    <button role="tab" data-tab="drill">Drill</button>
+    <button role="tab" data-tab="pairs">Pairs</button>
+    <button role="tab" data-tab="memo">Memo</button>
+    <button role="tab" data-tab="timer">Timer</button>
+    <button role="tab" data-tab="settings">Settings</button>
+  </nav>
+</header>
+
+<main>
+  <!-- LEARN -->
+  <section id="tab-learn" class="panel active" role="tabpanel">
+    <h2>Speffz reference</h2>
+    <p class="muted">Edges and corners each reuse the letters A–X in their own namespace.
+      Your buffers are highlighted. Quick check: the <strong>UB edge</strong> carries
+      <strong>A</strong> (U sticker) and <strong>Q</strong> (B sticker).</p>
+    <div class="seg" role="group" aria-label="Piece type">
+      <button id="learn-edges-btn" class="seg-btn active">Edges</button>
+      <button id="learn-corners-btn" class="seg-btn">Corners</button>
+    </div>
+    <div id="learn-grid" class="learn-grid"></div>
+  </section>
+
+  <!-- DRILL -->
+  <section id="tab-drill" class="panel" role="tabpanel">
+    <h2>Letter drills</h2>
+    <div class="controls">
+      <label>Pieces
+        <select id="drill-pieces">
+          <option value="both">Edges + corners</option>
+          <option value="edges">Edges only</option>
+          <option value="corners">Corners only</option>
+        </select>
+      </label>
+      <label>Direction
+        <select id="drill-dir">
+          <option value="s2l">Sticker → letter</option>
+          <option value="l2s">Letter → sticker</option>
+          <option value="mixed">Mixed</option>
+        </select>
+      </label>
+      <label>Answer
+        <select id="drill-mode">
+          <option value="choice">Multiple choice</option>
+          <option value="type">Type it</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="drill-nobuffer" checked> Skip buffers</label>
+    </div>
+    <div class="scorebar">
+      <span>Correct <strong id="drill-correct">0</strong>/<span id="drill-asked">0</span></span>
+      <span>Streak <strong id="drill-streak">0</strong></span>
+      <span>Best <strong id="drill-best">0</strong></span>
+      <button id="drill-reset" class="ghost">Reset</button>
+    </div>
+    <div id="drill-card" class="card">
+      <div id="drill-q" class="drill-q">Press “Next” to start.</div>
+      <div id="drill-opts" class="opts"></div>
+      <div id="drill-type" class="hidden">
+        <div id="letterpad" class="letterpad" aria-label="Letter pad"></div>
+        <div class="typerow">
+          <input id="drill-input" maxlength="1" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="A–X" aria-label="Type the letter">
+          <button id="drill-submit">Check</button>
+        </div>
+      </div>
+      <div id="drill-feedback" class="feedback" aria-live="polite"></div>
+      <button id="drill-next" class="primary">Next</button>
+    </div>
+  </section>
+
+  <!-- PAIRS -->
+  <section id="tab-pairs" class="panel" role="tabpanel">
+    <h2>Letter-pair words</h2>
+    <p class="muted">Give every 2-letter combo a vivid word or image. Pairs you save here
+      show up as hints in the Memo tab.</p>
+    <form id="pair-form" class="controls">
+      <label>Pair <input id="pair-key" maxlength="2" placeholder="e.g. QJ" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
+      <label class="grow">Word / image <input id="pair-word" placeholder="e.g. QuJay the parrot" autocomplete="off"></label>
+      <button type="submit" class="primary">Save pair</button>
+    </form>
+    <div class="controls">
+      <button id="pairs-quiz-btn">Quiz me</button>
+      <button id="pairs-export" class="ghost">Export JSON</button>
+      <button id="pairs-import-btn" class="ghost">Import JSON</button>
+      <input type="file" id="pairs-import-file" accept="application/json" class="hidden">
+    </div>
+    <div id="pairs-quiz" class="card hidden">
+      <div id="pq-pair" class="drill-q"></div>
+      <div id="pq-word" class="muted"></div>
+      <div class="row">
+        <button id="pq-reveal">Reveal</button>
+        <button id="pq-got" class="hidden">✓ I knew it</button>
+        <button id="pq-missed" class="hidden">✗ Missed</button>
+        <span id="pq-score" class="muted"></span>
+      </div>
+    </div>
+    <div id="pairs-count" class="muted"></div>
+    <ul id="pairs-list" class="pairs-list"></ul>
+  </section>
+
+  <!-- MEMO -->
+  <section id="tab-memo" class="panel" role="tabpanel">
+    <h2>Memo recall</h2>
+    <div class="controls">
+      <label>Length <input id="memo-len" type="number" min="2" max="24" value="6"></label>
+      <label>Mode
+        <select id="memo-mode">
+          <option value="letters">Single letters</option>
+          <option value="pairs">Letter pairs</option>
+        </select>
+      </label>
+      <label>Peek (s, 0 = manual) <input id="memo-peek" type="number" min="0" max="120" value="0"></label>
+      <button id="memo-new" class="primary">New sequence</button>
+    </div>
+    <div class="card">
+      <div id="memo-seq" class="memo-seq muted">Press “New sequence”.</div>
+      <div id="memo-hints" class="memo-hints"></div>
+      <div class="row">
+        <button id="memo-hide">Hide</button>
+        <button id="memo-show" class="ghost">Show</button>
+      </div>
+      <label class="recall-label">Recall (letters only)
+        <input id="memo-input" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="type the sequence">
+      </label>
+      <div class="row">
+        <button id="memo-check" class="primary">Check</button>
+        <span id="memo-timer" class="muted"></span>
+      </div>
+      <div id="memo-result" class="feedback" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- TIMER -->
+  <section id="tab-timer" class="panel" role="tabpanel">
+    <h2>Timer</h2>
+    <p class="muted">Hold <kbd>Space</kbd> (or press-and-hold the pad) until green, release to start, press again to stop. Click a time to cycle OK → +2 → DNF.</p>
+    <div id="scramble" class="scramble">—</div>
+    <div id="time-display" class="time-display">0.00</div>
+    <div id="timer-pad" class="timer-pad" tabindex="0" role="button" aria-label="Hold to start timer">HOLD</div>
+    <div class="row">
+      <button id="time-manual-add">Add manual time</button>
+      <button id="time-clear" class="ghost">Clear session</button>
+      <button id="time-new-scramble" class="ghost">New scramble</button>
+    </div>
+    <div class="stats">
+      <span>Solves <strong id="st-count">0</strong></span>
+      <span>Best <strong id="st-best">—</strong></span>
+      <span>ao5 <strong id="st-ao5">—</strong></span>
+      <span>ao12 <strong id="st-ao12">—</strong></span>
+    </div>
+    <ol id="times-list" class="times-list"></ol>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="tab-settings" class="panel" role="tabpanel">
+    <h2>Settings &amp; data</h2>
+    <div class="controls">
+      <label>Edge buffer <select id="set-edge-buffer"></select></label>
+      <label>Corner buffer <select id="set-corner-buffer"></select></label>
+      <label>Theme
+        <select id="set-theme">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+        </select>
+      </label>
+    </div>
+    <div class="controls">
+      <button id="data-export">Export all data</button>
+      <button id="data-import-btn" class="ghost">Import all data</button>
+      <input type="file" id="data-import-file" accept="application/json" class="hidden">
+      <button id="data-wipe" class="danger">Wipe everything</button>
+    </div>
+    <textarea id="data-box" rows="6" placeholder="Exported JSON appears here; paste JSON here to import, then press “Import all data”." aria-label="Data import/export"></textarea>
+    <h3>About</h3>
+    <p class="muted">Lettering follows the community-standard Speffz scheme (A–X for edges,
+      A–X for corners). Everything is stored locally in your browser — no account, no server.
+      See README for the full scheme tables, deploy notes, and roadmap.</p>
+  </section>
+</main>
+
+<footer>
+  <span>3BLD Trainer · static site · your data never leaves this browser</span>
+</footer>
+
+<script src="app.js" defer></script>
+</body>
+</html>
