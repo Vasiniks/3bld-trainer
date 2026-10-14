@@ -588,8 +588,8 @@ function fillBufferSelects() {
     cb.appendChild(o);
   }
 }
-$("set-edge-buffer").addEventListener("change", (e) => { store.settings.edgeBuffer = e.target.value; save(); renderLearn(); });
-$("set-corner-buffer").addEventListener("change", (e) => { store.settings.cornerBuffer = e.target.value; save(); renderLearn(); });
+$("set-edge-buffer").addEventListener("change", (e) => { store.settings.edgeBuffer = e.target.value; save(); renderLearn(); document.dispatchEvent(new CustomEvent("bld3-update")); });
+$("set-corner-buffer").addEventListener("change", (e) => { store.settings.cornerBuffer = e.target.value; save(); renderLearn(); document.dispatchEvent(new CustomEvent("bld3-update")); });
 $("set-theme").addEventListener("change", (e) => { store.settings.theme = e.target.value; save(); applyTheme(); });
 $("data-export").addEventListener("click", () => { $("data-box").value = JSON.stringify(store, null, 2); });
 $("data-import-btn").addEventListener("click", () => {
@@ -680,10 +680,12 @@ function saveSchemeEditor() {
     Object.keys(over[k]).every((key) => over[k][key] === stock[k][key]));
   store.scheme = same ? null : over;
   save(); renderLearn(); renderSchemeEditor();
+  document.dispatchEvent(new CustomEvent("bld3-update"));
 }
 $("scheme-save").addEventListener("click", saveSchemeEditor);
 $("scheme-reset").addEventListener("click", () => {
   store.scheme = null; save(); renderLearn(); renderSchemeEditor();
+  document.dispatchEvent(new CustomEvent("bld3-update"));
 });
 
 /* ---------- Boot ---------- */
@@ -714,3 +716,9 @@ for (const [id, key] of [["memo-len", "memoLen"], ["memo-mode", "memoMode"], ["m
   });
 }
 boot(true);
+
+// Bridge for cube3d.js (the 3D view reads the live scheme + buffers).
+window.BLD3 = {
+  effEdges, effCorners,
+  buffers: () => ({ edge: store.settings.edgeBuffer, corner: store.settings.cornerBuffer }),
+};

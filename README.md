@@ -39,6 +39,9 @@ The `.nojekyll` file is included so Pages serves everything verbatim.
 
 - **Learn** — lettering grids for all six faces, edges + corners, buffer highlighted,
   plus flashcard mode (tap a sticker to reveal).
+- **Cube 3D** — rotatable three.js cube with every sticker lettered live from your
+  scheme (custom schemes included), buffers ringed in gold; explore, flashcard, and
+  find-the-letter modes. CDN-loaded, no build step.
 - **Drill** — sticker→letter, letter→sticker, or mixed; multiple choice or type-in
   with an on-screen A–X pad; reveal-hint (counts as miss); skip-buffers option;
   streak/best tracking.
@@ -86,9 +89,9 @@ the UFR corner carries C (U), J (F), M (R). Default buffers: DF edges, UFR corne
 - [x] Reference teardown of `speffz-trainer.pages.dev` (React + 3D cube quiz game:
       renamable stickers, space-to-reveal hints, custom colors, scramble display —
       absorbed as custom schemes, flashcards, drill reveal)
+- [x] 3D cube view (three.js r160 via pinned CDN importmap — explore, flashcards,
+      find-the-letter; scramble animation still open)
 - [ ] Real-trace memo mode (cube simulator: scramble → true memo sequence)
-- [ ] 3D cube view (reference has one; out of scope for the no-build static app —
-      would need Three.js via CDN or a build step)
 - [ ] Commutator / execution drills, edge-flip and corner-twist cycles
 - [ ] Audio recall mode, day-graph stats
 

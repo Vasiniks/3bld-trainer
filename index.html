@@ -6,6 +6,14 @@
 <title>3BLD Trainer — Speffz, pairs, memo &amp; timer</title>
 <meta name="description" content="A general 3x3 blindfolded trainer: Speffz lettering drills, letter-pair words, memo recall, and a speed timer with stats. Static site, works on Cloudflare Pages and GitHub Pages.">
 <link rel="stylesheet" href="style.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 </head>
 <body>
 <header class="topbar">
@@ -18,6 +26,7 @@
   </div>
   <nav class="tabs" role="tablist" aria-label="Trainer sections">
     <button role="tab" data-tab="learn" class="active">Learn</button>
+    <button role="tab" data-tab="cube">Cube 3D</button>
     <button role="tab" data-tab="drill">Drill</button>
     <button role="tab" data-tab="pairs">Pairs</button>
     <button role="tab" data-tab="memo">Memo</button>
@@ -39,6 +48,35 @@
       <button id="learn-cards-btn" class="seg-btn">Flashcards</button>
     </div>
     <div id="learn-grid" class="learn-grid"></div>
+  </section>
+
+  <!-- CUBE 3D -->
+  <section id="tab-cube" class="panel" role="tabpanel">
+    <h2>3D cube</h2>
+    <p class="muted">True to Speffz: every sticker shows its live scheme letter (custom
+      scheme included). Drag to rotate, scroll or pinch to zoom, click a sticker.
+      Needs internet once for the three.js CDN.</p>
+    <div class="controls">
+      <label>Show
+        <select id="cube-pieces">
+          <option value="both">Edges + corners</option>
+          <option value="edges">Edges only</option>
+          <option value="corners">Corners only</option>
+        </select>
+      </label>
+      <label>Mode
+        <select id="cube-mode">
+          <option value="explore">Explore</option>
+          <option value="flash">Flashcards</option>
+          <option value="find">Find the letter</option>
+        </select>
+      </label>
+      <button id="cube-new" class="primary">New</button>
+      <span id="cube-score" class="muted"></span>
+    </div>
+    <div id="cube-prompt" class="drill-q"></div>
+    <div id="cube-wrap" aria-label="Interactive 3D cube"></div>
+    <div id="cube-readout" class="feedback" aria-live="polite"></div>
   </section>
 
   <!-- DRILL -->
@@ -219,5 +257,6 @@
 </footer>
 
 <script src="app.js" defer></script>
+<script src="cube3d.js" defer></script>
 </body>
 </html>
