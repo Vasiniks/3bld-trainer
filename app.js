@@ -688,6 +688,143 @@ $("scheme-reset").addEventListener("click", () => {
   document.dispatchEvent(new CustomEvent("bld3-update"));
 });
 
+/* ---------- Piece drill (single cubie, highlight side, type speffz) ---------- */
+let pieceQ = null, pieceLock = false;
+let pieceStats = (() => {
+  try {
+    const raw = localStorage.getItem("bld3.piece.v1");
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { asked: 0, correct: 0, streak: 0, best: 0 };
+})();
+function savePieceStats() { try { localStorage.setItem("bld3.piece.v1", JSON.stringify(pieceStats)); } catch {} }
+function renderPieceStats() {
+  $("piece-correct").textContent = pieceStats.correct;
+  $("piece-asked").textContent = pieceStats.asked;
+  $("piece-streak").textContent = pieceStats.streak;
+  $("piece-best").textContent = pieceStats.best;
+  $("piece-score").textContent = pieceStats.asked ? `${pieceStats.correct}/${pieceStats.asked}` : "";
+}
+function piecePool() {
+  const mode = $("piece-mode") ? $("piece-mode").value : "mixed";
+  let pool = [];
+  if (mode === "mixed" || mode === "edges") {
+    const es = effEdges();
+    // group by piece
+    const byPiece = {};
+    for (const s of es) { (byPiece[s.piece] = byPiece[s.piece] || []).push(s); }
+    for (const [piece, stickers] of Object.entries(byPiece)) {
+      pool.push({ type: "Edge", piece, stickers });
+    }
+  }
+  if (mode === "mixed" || mode === "corners") {
+    const cs = effCorners();
+    const byPiece = {};
+    for (const s of cs) { (byPiece[s.piece] = byPiece[s.piece] || []).push(s); }
+    for (const [piece, stickers] of Object.entries(byPiece)) {
+      pool.push({ type: "Corner", piece, stickers });
+    }
+  }
+  if ($("piece-nobuffer") && $("piece-nobuffer").checked) {
+    const eb = store.settings.edgeBuffer, cb = store.settings.cornerBuffer;
+    pool = pool.filter((p) => p.piece !== eb && p.piece !== cb);
+  }
+  return pool;
+}
+function nextPiece() {
+  const pool = piecePool();
+  if (!pool.length) {
+    $("piece-prompt").textContent = "No pieces — uncheck skip buffers.";
+    $("piece-feedback").textContent = "";
+    return;
+  }
+  const entry = pick(pool);
+  const highlight = pick(entry.stickers);
+  pieceQ = { entry, highlight, answered: false };
+  pieceLock = false;
+  $("piece-prompt").textContent = `${entry.type} ${entry.piece} — which letter is the glowing ${highlight.face} face?`;
+  const other = entry.stickers.filter((s) => s.face !== highlight.face).map((s) => `${s.face}:${s.letter}`).join(" · ");
+  $("piece-meta").textContent = other ? `Other faces: ${other}` : "";
+  $("piece-feedback").textContent = "";
+  $("piece-feedback").className = "feedback";
+  $("piece-input").value = "";
+  $("piece-input").focus();
+  buildPiecePad();
+  // 3D
+  const showOther = $("piece-showpiece") ? $("piece-showpiece").checked : true;
+  if (window.BLD3 && window.BLD3.piece && window.BLD3.piece.show) {
+    window.BLD3.piece.show({ pieceName: entry.piece, stickers: entry.stickers, highlight, type: entry.type }, { showOther });
+  }
+}
+function gradePiece(inputLetter, revealOnly) {
+  if (!pieceQ || pieceLock) return;
+  const truth = pieceQ.highlight.letter.toUpperCase();
+  if (revealOnly) {
+    pieceLock = true;
+    pieceStats.asked++; pieceStats.streak = 0; savePieceStats(); renderPieceStats();
+    $("piece-feedback").textContent = `Answer: ${truth} — ${pieceQ.entry.type} ${pieceQ.entry.piece} ${pieceQ.highlight.face} face.`;
+    $("piece-feedback").className = "feedback bad";
+    if (window.BLD3 && window.BLD3.piece && window.BLD3.piece.reveal) window.BLD3.piece.reveal(truth);
+    return;
+  }
+  const v = (inputLetter || "").trim().toUpperCase();
+  if (!/^[A-X]$/.test(v)) return;
+  pieceLock = true;
+  pieceStats.asked++;
+  const ok = v === truth;
+  if (ok) {
+    pieceStats.correct++; pieceStats.streak++; pieceStats.best = Math.max(pieceStats.best, pieceStats.streak);
+    $("piece-feedback").textContent = `Correct ✓ — ${truth}`;
+    $("piece-feedback").className = "feedback good";
+  } else {
+    pieceStats.streak = 0;
+    $("piece-feedback").textContent = `Not quite — answer: ${truth} (you typed ${v})`;
+    $("piece-feedback").className = "feedback bad";
+  }
+  savePieceStats(); renderPieceStats();
+  if (window.BLD3 && window.BLD3.piece && window.BLD3.piece.reveal) window.BLD3.piece.reveal(truth);
+  setTimeout(() => { if (pieceLock) nextPiece(); }, ok ? 850 : 1700);
+}
+function buildPiecePad() {
+  const pad = $("piece-letterpad");
+  if (!pad) return;
+  pad.innerHTML = "";
+  for (const L of LETTERS) {
+    const b = document.createElement("button");
+    b.textContent = L;
+    b.addEventListener("click", () => { $("piece-input").value = L; gradePiece(L, false); });
+    pad.appendChild(b);
+  }
+}
+(function initPieceListeners() {
+  // called after DOM ready - elements exist by boot time
+  const whenReady = () => {
+    if (!$("piece-mode")) return setTimeout(whenReady, 100);
+    $("piece-mode").addEventListener("change", nextPiece);
+    $("piece-nobuffer").addEventListener("change", nextPiece);
+    $("piece-showpiece").addEventListener("change", () => {
+      if (!pieceQ) return;
+      const showOther = $("piece-showpiece").checked;
+      if (window.BLD3 && window.BLD3.piece && window.BLD3.piece.show) {
+        window.BLD3.piece.show({ pieceName: pieceQ.entry.piece, stickers: pieceQ.entry.stickers, highlight: pieceQ.highlight, type: pieceQ.entry.type }, { showOther });
+      }
+    });
+    $("piece-new").addEventListener("click", nextPiece);
+    $("piece-reset").addEventListener("click", () => {
+      pieceStats = { asked: 0, correct: 0, streak: 0, best: 0 };
+      savePieceStats(); renderPieceStats();
+      $("piece-feedback").textContent = ""; $("piece-prompt").textContent = "Press “New” to start.";
+    });
+    $("piece-submit").addEventListener("click", () => gradePiece($("piece-input").value, false));
+    $("piece-reveal").addEventListener("click", () => gradePiece("", true));
+    $("piece-next").addEventListener("click", nextPiece);
+    $("piece-input").addEventListener("keydown", (e) => { if (e.key === "Enter") gradePiece($("piece-input").value, false); });
+    renderPieceStats();
+    buildPiecePad();
+  };
+  whenReady();
+})();
+
 /* ---------- Boot ---------- */
 function boot(first) {
   applyTheme();
@@ -718,7 +855,11 @@ for (const [id, key] of [["memo-len", "memoLen"], ["memo-mode", "memoMode"], ["m
 boot(true);
 
 // Bridge for cube3d.js (the 3D view reads the live scheme + buffers).
-window.BLD3 = {
+window.BLD3 = Object.assign(window.BLD3 || {}, {
   effEdges, effCorners,
   buffers: () => ({ edge: store.settings.edgeBuffer, corner: store.settings.cornerBuffer }),
-};
+});
+ // keep piece renderer if already attached
+if (window.BLD3.piece && !window.BLD3.piece._kept) {
+  // nothing, preserved via Object.assign
+}

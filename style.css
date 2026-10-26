@@ -150,6 +150,10 @@ button:disabled { opacity: 0.45; cursor: default; }
 kbd { background: var(--bg-soft); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 1px 7px; font-size: 13px; }
 #cube-wrap { height: 440px; background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin: 12px 0; }
 #cube-wrap canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+#piece-wrap { height: 360px; background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin: 12px 0; position: relative; }
+#piece-wrap canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+.piece-legend { display:flex; gap:8px; flex-wrap:wrap; margin:4px 0; }
+.piece-legend span { font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--line); background:var(--bg-soft); }
 #data-box { width: 100%; margin-top: 8px; font-family: ui-monospace, monospace; font-size: 12px; }
 .cardback { cursor: pointer; }
 .cardback .letter { color: var(--muted); }
@@ -161,6 +165,7 @@ kbd { background: var(--bg-soft); border: 1px solid var(--line); border-bottom-w
 footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 @media (max-width: 560px) {
   #cube-wrap { height: 330px; }
+  #piece-wrap { height: 300px; }
   .time-display { font-size: 56px; }
   .drill-q { font-size: 24px; }
   .memo-seq { font-size: 26px; }

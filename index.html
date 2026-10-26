@@ -28,6 +28,7 @@
     <button role="tab" data-tab="learn" class="active">Learn</button>
     <button role="tab" data-tab="cube">Cube 3D</button>
     <button role="tab" data-tab="drill">Drill</button>
+    <button role="tab" data-tab="piece">Piece</button>
     <button role="tab" data-tab="pairs">Pairs</button>
     <button role="tab" data-tab="memo">Memo</button>
     <button role="tab" data-tab="timer">Timer</button>
@@ -124,6 +125,45 @@
       <div id="drill-feedback" class="feedback" aria-live="polite"></div>
       <button id="drill-reveal" class="ghost">Reveal (counts as miss)</button>
       <button id="drill-next" class="primary">Next</button>
+    </div>
+  </section>
+
+  <!-- PIECE (single-piece speffz) -->
+  <section id="tab-piece" class="panel" role="tabpanel">
+    <h2>Piece drill</h2>
+    <p class="muted">One piece only. The glowing side is the quiz — type its Speffz letter.
+      Great for visualising where each letter lives.</p>
+    <div class="controls">
+      <label>Mode
+        <select id="piece-mode">
+          <option value="mixed">Edges + corners</option>
+          <option value="edges">Edges only</option>
+          <option value="corners">Corners only</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="piece-nobuffer" checked> Skip buffers</label>
+      <label class="check"><input type="checkbox" id="piece-showpiece" checked> Show other stickers</label>
+      <button id="piece-new" class="primary">New</button>
+      <span id="piece-score" class="muted"></span>
+    </div>
+    <div class="scorebar">
+      <span>Correct <strong id="piece-correct">0</strong>/<span id="piece-asked">0</span></span>
+      <span>Streak <strong id="piece-streak">0</strong></span>
+      <span>Best <strong id="piece-best">0</strong></span>
+      <button id="piece-reset" class="ghost">Reset</button>
+    </div>
+    <div id="piece-card" class="card">
+      <div id="piece-prompt" class="drill-q">Press “New” to start.</div>
+      <div id="piece-wrap" aria-label="Single piece 3D view"></div>
+      <div id="piece-meta" class="muted" style="margin:6px 0 8px"></div>
+      <div id="piece-letterpad" class="letterpad" aria-label="Letter pad"></div>
+      <div class="typerow">
+        <input id="piece-input" maxlength="1" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="A–X" aria-label="Type the letter">
+        <button id="piece-submit">Check</button>
+        <button id="piece-reveal" class="ghost">Reveal</button>
+        <button id="piece-next" class="ghost">Next</button>
+      </div>
+      <div id="piece-feedback" class="feedback" aria-live="polite"></div>
     </div>
   </section>
 
@@ -258,5 +298,6 @@
 
 <script src="app.js" defer></script>
 <script src="cube3d.js" defer></script>
+<script src="piece3d.js" defer></script>
 </body>
 </html>

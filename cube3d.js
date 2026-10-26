@@ -244,19 +244,33 @@
     dir.position.set(4, 6, 5);
     scene.add(dir);
 
-    const cubieGeo = new THREE.BoxGeometry(0.95, 0.95, 0.95);
-    const cubieMat = new THREE.MeshStandardMaterial({ color: 0x14181f, roughness: 0.6, metalness: 0.1 });
+    // --- Stickerless: each cubie face gets its own color (SOLID FACE_COLOR) ---
+    function cubieMaterialsAt(x, y, z) {
+      // BoxGeometry material order: +x, -x, +y, -y, +z, -z
+      const col = (hex) => new THREE.MeshStandardMaterial({ color: hex, roughness: 0.5, metalness: 0.05 });
+      const dark = new THREE.MeshStandardMaterial({ color: 0x0e131b, roughness: 0.8, metalness: 0.02 });
+      return [
+        x === 1 ? col(FACE_COLOR.R) : dark,  // +x R
+        x === -1 ? col(FACE_COLOR.L) : dark, // -x L
+        y === 1 ? col(FACE_COLOR.U) : dark,  // +y U
+        y === -1 ? col(FACE_COLOR.D) : dark, // -y D
+        z === 1 ? col(FACE_COLOR.F) : dark,  // +z F
+        z === -1 ? col(FACE_COLOR.B) : dark, // -z B
+      ];
+    }
+    const cubieGeo = new THREE.BoxGeometry(0.99, 0.99, 0.99);
     for (let x = -1; x <= 1; x++) {
       for (let y = -1; y <= 1; y++) {
         for (let z = -1; z <= 1; z++) {
           if (!x && !y && !z) continue;
-          const c = new THREE.Mesh(cubieGeo, cubieMat);
+          const mats = cubieMaterialsAt(x, y, z);
+          const c = new THREE.Mesh(cubieGeo, mats);
           c.position.set(x, y, z);
           scene.add(c);
         }
       }
     }
-    planeGeo = new THREE.PlaneGeometry(0.8, 0.8);
+    planeGeo = new THREE.PlaneGeometry(0.84, 0.84);
     raycaster = new THREE.Raycaster();
     renderer.domElement.addEventListener("pointerdown", onPointerDown);
     renderer.domElement.addEventListener("pointerup", onPointerUp);
